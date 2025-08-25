@@ -85,10 +85,16 @@ class CyberAmenti:
             self.interface.clear_screen()
             self.show_banner()
             
-            # Main menu options
+            # Main menu options with responsive design
             menu_table = Table(show_header=False, style=self.theme_manager.current_theme['text'])
-            menu_table.add_column("Option", style=self.theme_manager.current_theme['accent'])
-            menu_table.add_column("Description", style=self.theme_manager.current_theme['text'])
+            
+            # Get terminal width from interface for responsive design
+            terminal_width = self.interface.get_terminal_width()
+            option_width = 8 if terminal_width < 100 else 10
+            desc_width = max(30, terminal_width - 20) if terminal_width > 50 else None
+            
+            menu_table.add_column("Option", style=self.theme_manager.current_theme['accent'], width=option_width)
+            menu_table.add_column("Description", style=self.theme_manager.current_theme['text'], width=desc_width)
             
             menu_options = [
                 ("1", self.translator.get("scan_target")),
@@ -102,7 +108,10 @@ class CyberAmenti:
             ]
             
             for option, description in menu_options:
-                menu_table.add_row(f"[{option}]", description)
+                # Truncate descriptions on smaller screens
+                max_desc_length = max(25, terminal_width - 25) if terminal_width > 50 else 20
+                truncated_desc = description[:max_desc_length] + "..." if len(description) > max_desc_length else description
+                menu_table.add_row(f"[{option}]", truncated_desc)
             
             menu_panel = Panel(
                 menu_table,

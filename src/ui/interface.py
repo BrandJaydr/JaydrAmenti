@@ -6,6 +6,7 @@ Advanced cyberpunk-themed CLI interface for red team operations
 import os
 import time
 import json
+import shutil
 from typing import Dict, List, Optional
 from rich.console import Console
 from rich.panel import Panel
@@ -22,10 +23,50 @@ from rich.markdown import Markdown
 class CyberAmentiInterface:
     def __init__(self):
         self.console = Console()
+        self.terminal_width = self.get_terminal_width()
+        self.terminal_height = self.get_terminal_height()
+    
+    def get_terminal_width(self) -> int:
+        """Get terminal width for responsive design"""
+        try:
+            return shutil.get_terminal_size().columns
+        except:
+            return 80  # Fallback width
+    
+    def get_terminal_height(self) -> int:
+        """Get terminal height for responsive design"""
+        try:
+            return shutil.get_terminal_size().lines
+        except:
+            return 24  # Fallback height
+    
+    def update_terminal_size(self):
+        """Update terminal dimensions (call when screen might have resized)"""
+        self.terminal_width = self.get_terminal_width()
+        self.terminal_height = self.get_terminal_height()
+    
+    def get_responsive_table_width(self, columns: int) -> Optional[int]:
+        """Calculate responsive table width based on terminal size"""
+        if self.terminal_width < 80:  # Mobile/small terminal
+            return None  # Let Rich handle auto-sizing
+        elif self.terminal_width < 120:  # Medium terminal
+            return max(10, (self.terminal_width - 10) // columns)
+        else:  # Large terminal
+            return max(15, (self.terminal_width - 20) // columns)
+    
+    def truncate_text(self, text: str, max_length: int) -> str:
+        """Truncate text for responsive display"""
+        if not text:
+            return "N/A"
+        if len(text) <= max_length:
+            return text
+        return text[:max_length-3] + "..."
     
     def clear_screen(self):
         """Clear the terminal screen"""
         os.system('clear' if os.name == 'posix' else 'cls')
+        # Update terminal size after clearing
+        self.update_terminal_size()
     
     def show_scan_menu(self, scanner, profiler, exploits, db, theme_manager, translator):
         """Display network scanning operations menu"""
@@ -68,11 +109,19 @@ class CyberAmentiInterface:
                 break
     
     def _create_scan_options_table(self, scanner, translator, theme):
-        """Create scan options table"""
+        """Create responsive scan options table"""
         table = Table(show_header=False, style=theme['text'])
-        table.add_column("Option", style=theme['accent'], width=10)
-        table.add_column("Description", style=theme['text'])
-        table.add_column("Details", style=theme['secondary'])
+        
+        # Responsive column widths
+        option_width = 8 if self.terminal_width < 100 else 10
+        desc_width = self.get_responsive_table_width(3)
+        
+        table.add_column("Option", style=theme['accent'], width=option_width)
+        table.add_column("Description", style=theme['text'], width=desc_width)
+        
+        # Only add details column on larger screens
+        if self.terminal_width >= 100:
+            table.add_column("Details", style=theme['secondary'], width=desc_width)
         
         options = [
             ("1", translator.get("basic_scans"), translator.get("basic_scans_desc")),
@@ -85,8 +134,15 @@ class CyberAmentiInterface:
             ("0", translator.get("back_to_main"), "")
         ]
         
+        max_desc_length = max(30, (self.terminal_width - 20) // 2) if self.terminal_width > 80 else 25
+        
         for option, desc, details in options:
-            table.add_row(f"[{option}]", desc, details)
+            truncated_desc = self.truncate_text(desc, max_desc_length)
+            if self.terminal_width >= 100 and details:
+                truncated_details = self.truncate_text(details, max_desc_length)
+                table.add_row(f"[{option}]", truncated_desc, truncated_details)
+            else:
+                table.add_row(f"[{option}]", truncated_desc)
         
         return table
     
@@ -228,7 +284,7 @@ class CyberAmentiInterface:
             kwargs['ports'] = ports
         elif scan_subtype == 'top_ports':
             num_ports = IntPrompt.ask(f"[{theme['accent']}]Number of top ports[/]", default=1000)
-            kwargs['number'] = num_ports
+            kwargs['number'] = str(num_ports)
         
         # Execute scan
         results = scanner.execute_scan('ports', scan_subtype, **kwargs)
@@ -304,10 +360,10 @@ class CyberAmentiInterface:
         
         if scan_subtype == 'decoy':
             num_decoys = IntPrompt.ask(f"[{theme['accent']}]Number of decoy IPs[/]", default=5)
-            kwargs['number'] = num_decoys
+            kwargs['number'] = str(num_decoys)
         elif scan_subtype == 'source_port':
             port = IntPrompt.ask(f"[{theme['accent']}]Source port[/]", default=53)
-            kwargs['port'] = port
+            kwargs['port'] = str(port)
         elif scan_subtype == 'spoof_mac':
             mac = Prompt.ask(f"[{theme['accent']}]MAC address (or 0 for random)[/]", default="0")
             kwargs['mac'] = mac
@@ -397,7 +453,7 @@ class CyberAmentiInterface:
         Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
     
     def _display_host_details(self, host_data, theme):
-        """Display detailed host information"""
+        """Display detailed host information with responsive design"""
         # Extract host IP
         ip = "Unknown"
         addresses = host_data.get('addresses', [])
@@ -406,20 +462,23 @@ class CyberAmentiInterface:
                 ip = addr.get('addr')
                 break
         
-        # Create host details table
+        # Create responsive host details table
+        col_width = self.get_responsive_table_width(4)
+        max_text_length = max(15, (self.terminal_width - 30) // 4) if self.terminal_width > 80 else 12
+        
         host_table = Table(title=f"Host Details: {ip}")
-        host_table.add_column("Port", style=theme['accent'])
-        host_table.add_column("State", style=theme['text'])
-        host_table.add_column("Service", style=theme['primary'])
-        host_table.add_column("Version", style=theme['text'])
+        host_table.add_column("Port", style=theme['accent'], width=col_width)
+        host_table.add_column("State", style=theme['text'], width=col_width)
+        host_table.add_column("Service", style=theme['primary'], width=col_width)
+        host_table.add_column("Version", style=theme['text'], width=col_width)
         
         ports = host_data.get('ports', [])
         for port_data in ports:
             port_num = port_data.get('portid', 'N/A')
             state = port_data.get('state', {}).get('state', 'N/A')
             service_info = port_data.get('service', {})
-            service_name = service_info.get('name', 'N/A')
-            version = service_info.get('version', 'N/A')
+            service_name = self.truncate_text(service_info.get('name', 'N/A'), max_text_length)
+            version = self.truncate_text(service_info.get('version', 'N/A'), max_text_length)
             
             # Color code the state
             if state == 'open':
@@ -524,10 +583,15 @@ class CyberAmentiInterface:
                 break
     
     def _create_netcat_options_table(self, translator, theme):
-        """Create netcat options table"""
+        """Create responsive netcat options table"""
         table = Table(show_header=False, style=theme['text'])
-        table.add_column("Option", style=theme['accent'], width=10)
-        table.add_column("Description", style=theme['text'])
+        
+        # Responsive design
+        option_width = 8 if self.terminal_width < 100 else 10
+        desc_width = self.get_responsive_table_width(2)
+        
+        table.add_column("Option", style=theme['accent'], width=option_width)
+        table.add_column("Description", style=theme['text'], width=desc_width)
         
         options = [
             ("1", translator.get("port_scanning")),
@@ -539,8 +603,11 @@ class CyberAmentiInterface:
             ("0", translator.get("back_to_main"))
         ]
         
+        max_desc_length = max(25, (self.terminal_width - 15)) if self.terminal_width > 60 else 20
+        
         for option, desc in options:
-            table.add_row(f"[{option}]", desc)
+            truncated_desc = self.truncate_text(desc, max_desc_length)
+            table.add_row(f"[{option}]", truncated_desc)
         
         return table
     
@@ -820,6 +887,44 @@ class CyberAmentiInterface:
         
         Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
     
+    def _display_profiles_table(self, profiles, theme, translator):
+        """Display profiles in a responsive table format"""
+        if not profiles:
+            return
+        
+        # Responsive table design
+        col_width = self.get_responsive_table_width(6)
+        max_text_length = max(20, (self.terminal_width - 40) // 6) if self.terminal_width > 80 else 15
+        
+        profiles_table = Table(title="Device Profiles")
+        profiles_table.add_column("IP Address", style=theme['accent'], width=col_width)
+        profiles_table.add_column("Hostname", style=theme['text'], width=col_width)
+        profiles_table.add_column("OS Family", style=theme['text'], width=col_width)
+        profiles_table.add_column("Device Type", style=theme['primary'], width=col_width)
+        profiles_table.add_column("Risk Score", style=theme['text'], width=col_width)
+        profiles_table.add_column("Last Seen", style=theme['secondary'], width=col_width)
+        
+        for profile_data in profiles:
+            ip = profile_data.get('ip_address', 'N/A')
+            hostname = self.truncate_text(profile_data.get('hostname', 'N/A'), max_text_length)
+            os_family = self.truncate_text(profile_data.get('os_family', 'N/A'), max_text_length)
+            device_type = self.truncate_text(profile_data.get('device_type', 'N/A'), max_text_length)
+            risk_score = f"{profile_data.get('risk_score', 0):.1f}/10.0"
+            last_seen = time.ctime(profile_data.get('last_seen', 0))
+            
+            # Color code risk score
+            risk_float = profile_data.get('risk_score', 0)
+            if risk_float >= 7.0:
+                risk_score = f"[red]{risk_score}[/red]"
+            elif risk_float >= 4.0:
+                risk_score = f"[yellow]{risk_score}[/yellow]"
+            else:
+                risk_score = f"[green]{risk_score}[/green]"
+            
+            profiles_table.add_row(ip, hostname, os_family, device_type, risk_score, last_seen)
+        
+        self.console.print(profiles_table)
+    
     def _search_profiles(self, profiler, db, theme_manager, translator):
         """Search device profiles"""
         theme = theme_manager.current_theme
@@ -833,7 +938,7 @@ class CyberAmentiInterface:
         else:
             self.console.print(f"[{theme['primary']}]Found {len(profiles)} profiles matching '{search_term}'[/]")
             # Display using the same table format as list_profiles
-            self._display_profiles_table(profiles, theme)
+            self._display_profiles_table(profiles, theme, translator)
         
         Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
     
@@ -856,18 +961,21 @@ class CyberAmentiInterface:
             profile_table = profiler.get_profile_summary_table(profile)
             self.console.print(profile_table)
             
-            # Show ports and services
+            # Show ports and services with responsive design
             if profile.services:
+                col_width = self.get_responsive_table_width(4)
+                max_text_length = max(12, (self.terminal_width - 25) // 4) if self.terminal_width > 80 else 10
+                
                 services_table = Table(title="Services")
-                services_table.add_column("Port", style=theme['accent'])
-                services_table.add_column("Service", style=theme['primary'])
-                services_table.add_column("Product", style=theme['text'])
-                services_table.add_column("Version", style=theme['text'])
+                services_table.add_column("Port", style=theme['accent'], width=col_width)
+                services_table.add_column("Service", style=theme['primary'], width=col_width)
+                services_table.add_column("Product", style=theme['text'], width=col_width)
+                services_table.add_column("Version", style=theme['text'], width=col_width)
                 
                 for port, service_info in profile.services.items():
-                    product = service_info.get('product', 'N/A')
-                    version = service_info.get('version', 'N/A')
-                    service_name = service_info.get('name', 'N/A')
+                    product = self.truncate_text(service_info.get('product', 'N/A'), max_text_length)
+                    version = self.truncate_text(service_info.get('version', 'N/A'), max_text_length)
+                    service_name = self.truncate_text(service_info.get('name', 'N/A'), max_text_length)
                     
                     services_table.add_row(port, service_name, product, version)
                 
