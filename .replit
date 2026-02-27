@@ -4,10 +4,10 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["nmap", "netcat"]
+packages = ["netcat", "nmap"]
 
 [workflows]
-runButton = "Project"
+runButton = "Cyber Amenti Server"
 
 [[workflows.workflow]]
 name = "Project"
