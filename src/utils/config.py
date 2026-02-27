@@ -38,7 +38,9 @@ class ConfigManager:
             'banner_enabled': True,
             'sound_enabled': False,
             'notifications_enabled': True,
-            'debug_mode': False
+            'debug_mode': False,
+            'hotkey_terminate': 'ctrl+c',
+            'split_screen': False
         }
         
         self.ensure_config_directory()

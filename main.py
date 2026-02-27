@@ -40,7 +40,7 @@ class CyberAmenti:
         self.config = ConfigManager()
         self.theme_manager = ThemeManager()
         self.translator = Translator()
-        self.interface = CyberAmentiInterface()
+        self.interface = CyberAmentiInterface(config_manager=self.config)
         self.scanner = NmapScanner()
         self.netcat = NetcatManager()
         self.profiler = DeviceProfiler()
@@ -102,6 +102,7 @@ class CyberAmenti:
                 ("3", self.translator.get("device_profiles")),
                 ("4", self.translator.get("exploit_database")),
                 ("5", self.translator.get("intelligence_gathering")),
+                ("S", "Sherlock Search"),
                 ("6", self.translator.get("settings")),
                 ("7", self.translator.get("help")),
                 ("0", self.translator.get("exit"))
@@ -138,6 +139,8 @@ class CyberAmenti:
                 self.exploits_menu()
             elif choice == "5":
                 self.dossier_menu()
+            elif choice.upper() == "S":
+                self.sherlock_menu()
             elif choice == "6":
                 self.settings_menu()
             elif choice == "7":
@@ -201,6 +204,13 @@ class CyberAmenti:
     def help_menu(self):
         """Help and documentation menu"""
         self.interface.show_help_menu(
+            self.theme_manager,
+            self.translator
+        )
+
+    def sherlock_menu(self):
+        """Sherlock Intelligence menu"""
+        self.interface.show_sherlock_menu(
             self.theme_manager,
             self.translator
         )

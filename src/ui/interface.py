@@ -7,6 +7,8 @@ import os
 import time
 import json
 import shutil
+import threading
+import keyboard
 from typing import Dict, List, Optional
 from rich.console import Console
 from rich.panel import Panel
@@ -21,11 +23,52 @@ from rich.tree import Tree
 from rich.markdown import Markdown
 
 class CyberAmentiInterface:
-    def __init__(self):
+    def __init__(self, config_manager=None):
         self.console = Console()
         self.terminal_width = self.get_terminal_width()
         self.terminal_height = self.get_terminal_height()
+        self.config = config_manager
+        self._setup_hotkeys()
     
+    def _setup_hotkeys(self):
+        if self.config:
+            hotkey = self.config.get('hotkey_terminate', 'ctrl+c')
+            try:
+                keyboard.add_hotkey(hotkey, self._terminate_operation)
+            except:
+                pass
+
+    def _terminate_operation(self):
+        self.console.print("\n[bold red]!!! HOTKEY TERMINATION TRIGGERED !!![/bold red]")
+        os._exit(1)
+    
+    def display_split_screen(self, left_content, right_content, left_title="Left", right_title="Right"):
+        layout = Layout()
+        layout.split_row(
+            Layout(Panel(left_content, title=left_title), name="left"),
+            Layout(Panel(right_content, title=right_title), name="right")
+        )
+        self.console.print(layout)
+
+    def show_sherlock_menu(self, theme_manager, translator):
+        theme = theme_manager.current_theme
+        self.clear_screen()
+        self.console.print(Panel("Sherlock Intelligence Integration", style=theme['primary']))
+        username = Prompt.ask(f"[{theme['accent']}]Enter username to search[/]")
+        
+        self.console.print(f"[{theme['info']}]Searching for {username} across platforms...[/]")
+        # Simplified call to sherlock
+        try:
+            import subprocess
+            cmd = [sys.executable, "src/core/sherlock/sherlock", username]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = process.communicate()
+            self.console.print(stdout)
+        except Exception as e:
+            self.console.print(f"[red]Sherlock failed: {e}[/red]")
+        
+        Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
+
     def get_terminal_width(self) -> int:
         """Get terminal width for responsive design"""
         try:
@@ -1414,7 +1457,7 @@ class CyberAmentiInterface:
             
             menu_title = translator.get("settings")
             settings_panel = Panel(
-                self._create_settings_options_table(translator, theme),
+                self._create_settings_options_table(translator, theme, config),
                 title=f"[bold]{menu_title}[/bold]",
                 style=theme['primary'],
                 border_style=theme['accent']
@@ -1424,7 +1467,7 @@ class CyberAmentiInterface:
             
             choice = Prompt.ask(
                 f"\n[{theme['accent']}]►[/] {translator.get('select_option')}",
-                choices=["1", "2", "3", "4", "0"],
+                choices=["1", "2", "3", "4", "5", "0"],
                 show_choices=False
             )
             
@@ -1433,23 +1476,30 @@ class CyberAmentiInterface:
             elif choice == "2":
                 self._change_language(config, theme_manager, translator)
             elif choice == "3":
-                self._view_current_settings(config, theme_manager, translator)
+                new_hotkey = Prompt.ask(f"[{theme['accent']}]Enter new termination hotkey (current: {config.get('hotkey_terminate')})[/]")
+                config.set('hotkey_terminate', new_hotkey)
+                self._setup_hotkeys()
             elif choice == "4":
+                self._view_current_settings(config, theme_manager, translator)
+            elif choice == "5":
                 self._reset_settings(config, theme_manager, translator)
             elif choice == "0":
                 break
     
-    def _create_settings_options_table(self, translator, theme):
+    def _create_settings_options_table(self, translator, theme, config=None):
         """Create settings options table"""
         table = Table(show_header=False, style=theme['text'])
         table.add_column("Option", style=theme['accent'], width=10)
         table.add_column("Description", style=theme['text'])
         
+        hotkey = config.get('hotkey_terminate', 'N/A') if config else 'N/A'
+        
         options = [
             ("1", translator.get("change_theme")),
             ("2", translator.get("change_language")),
-            ("3", translator.get("view_settings")),
-            ("4", translator.get("reset_settings")),
+            ("3", f"Change Termination Hotkey (Current: {hotkey})"),
+            ("4", translator.get("view_settings")),
+            ("5", translator.get("reset_settings")),
             ("0", translator.get("back_to_main"))
         ]
         
