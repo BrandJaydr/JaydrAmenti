@@ -19,7 +19,7 @@ Cyber Amenti is a comprehensive red team tool designed for network reconnaissanc
 ### Prerequisites
 
 - **Python**: 3.11+
-- **System Tools**:
+- **System Tools**: 
   - `nmap` (Network Mapper)
   - `nc` (Netcat)
 
@@ -75,5 +75,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Created by Jaydr Nexus**
+**Created by Jaydr Nexus**  
 *Unveiling the Hidden Layers of the Network.*
