@@ -144,6 +144,7 @@
   "service": "Service",
   "service_correlation": "Service Correlation",
   "settings": "Settings",
+  "sherlock_search": "Sherlock Search",
   "setup_listener": "Setup Listener",
   "severity": "Severity",
   "smtp": "SMTP",

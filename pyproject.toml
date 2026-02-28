@@ -7,5 +7,13 @@ dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
     "python-nmap>=0.7.1",
-    "requests>=2.31.0"
+    "requests>=2.31.0",
+    "tomli>=2.2.1",
+    "requests-futures>=1.0.0",
+    "PySocks>=1.7.0",
+    "colorama>=0.4.1",
+    "pandas>=2.2.1",
+    "openpyxl>=3.0.10",
+    "stem>=1.8.0",
+    "keyboard>=0.13.5"
 ]
