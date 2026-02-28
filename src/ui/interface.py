@@ -4,6 +4,7 @@ Advanced cyberpunk-themed CLI interface for red team operations
 """
 
 import os
+import sys
 import time
 import json
 import shutil
@@ -60,8 +61,8 @@ class CyberAmentiInterface:
         # Simplified call to sherlock
         try:
             import subprocess
-            cmd = [sys.executable, "src/core/sherlock/sherlock", username]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            cmd = [sys.executable, "-m", "sherlock_project", username]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd="src/core/sherlock")
             stdout, stderr = process.communicate()
             self.console.print(stdout)
         except Exception as e:

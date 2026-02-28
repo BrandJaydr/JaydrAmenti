@@ -102,7 +102,7 @@ class CyberAmenti:
                 ("3", self.translator.get("device_profiles")),
                 ("4", self.translator.get("exploit_database")),
                 ("5", self.translator.get("intelligence_gathering")),
-                ("S", "Sherlock Search"),
+                ("S", self.translator.get("sherlock_search")),
                 ("6", self.translator.get("settings")),
                 ("7", self.translator.get("help")),
                 ("0", self.translator.get("exit"))
