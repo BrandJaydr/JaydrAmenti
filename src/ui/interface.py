@@ -54,21 +54,29 @@ class CyberAmentiInterface:
     def show_sherlock_menu(self, theme_manager, translator):
         theme = theme_manager.current_theme
         self.clear_screen()
-        self.console.print(Panel("Sherlock Intelligence Integration", style=theme['primary']))
-        username = Prompt.ask(f"[{theme['accent']}]Enter username to search[/]")
+        title = translator.get("sherlock_intelligence", "Sherlock Intelligence Integration")
+        self.console.print(Panel(title, style=theme['primary']))
+        prompt_text = translator.get("enter_username", "Enter username to search")
+        username = Prompt.ask(f"[{theme['accent']}]" + prompt_text + "[/]")
         
-        self.console.print(f"[{theme['info']}]Searching for {username} across platforms...[/]")
-        # Simplified call to sherlock
+        # Call to sherlock with status spinner for better UX
         try:
             import subprocess
             cmd = [sys.executable, "-m", "sherlock_project", username]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd="src/core/sherlock")
-            stdout, stderr = process.communicate()
-            self.console.print(stdout)
+
+            with self.console.status(f"[{theme['info']}]Searching for {username} across platforms...[/]"):
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd="src/core/sherlock")
+                stdout, stderr = process.communicate()
+
+            if stdout:
+                self.console.print(stdout)
+            if stderr:
+                self.console.print(f"[{theme['error']}]Errors:[/]\n{stderr}")
+
         except Exception as e:
             self.console.print(f"[red]Sherlock failed: {e}[/red]")
         
-        Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
+        Prompt.ask(f"\n[{theme['secondary']}]" + translator.get("press_enter") + "...[/]", default="")
 
     def get_terminal_width(self) -> int:
         """Get terminal width for responsive design"""
