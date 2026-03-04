@@ -180,5 +180,9 @@
   "weeks": "semanas",
   "workstation": "Estación de Trabajo",
   "years": "años",
-  "yesterday": "Ayer"
+  "yesterday": "Ayer",
+  "enter_username": "Ingrese el nombre de usuario para buscar",
+  "searching_for": "Buscando a {username}...",
+  "searching_social": "Encontrado en",
+  "sherlock_search": "Integración de Inteligencia Sherlock"
 }

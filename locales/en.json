@@ -144,7 +144,7 @@
   "service": "Service",
   "service_correlation": "Service Correlation",
   "settings": "Settings",
-  "sherlock_search": "Sherlock Search",
+  "sherlock_search": "Sherlock Intelligence Integration",
   "setup_listener": "Setup Listener",
   "severity": "Severity",
   "smtp": "SMTP",
@@ -181,5 +181,8 @@
   "weeks": "weeks",
   "workstation": "Workstation",
   "years": "years",
-  "yesterday": "Yesterday"
+  "yesterday": "Yesterday",
+  "enter_username": "Enter username to search",
+  "searching_for": "Searching for {username}...",
+  "searching_social": "Found on"
 }
