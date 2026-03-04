@@ -479,7 +479,7 @@ class CyberAmentiInterface:
         history_table.add_column("Status", style=theme['text'])
         
         for i, scan in enumerate(scanner.scan_history[-20:], 1):  # Show last 20 scans
-            timestamp = time.ctime(scan.get('timestamp', 0))
+            timestamp = translator.format_relative_time(scan.get('timestamp', 0))
             scan_type = f"{scan.get('scan_type', 'N/A')}/{scan.get('scan_subtype', 'N/A')}"
             status = "✓ Success" if scan.get('return_code') == 0 else "✗ Failed"
             
@@ -914,7 +914,7 @@ class CyberAmentiInterface:
                 os_family = profile_data.get('os_family', 'Unknown')
                 device_type = profile_data.get('device_type', 'Unknown')
                 risk_score = f"{profile_data.get('risk_score', 0):.1f}/10.0"
-                last_seen = time.ctime(profile_data.get('last_seen', 0))
+                last_seen = translator.format_relative_time(profile_data.get('last_seen', 0))
                 
                 # Color code risk score
                 risk_float = profile_data.get('risk_score', 0)
@@ -954,7 +954,7 @@ class CyberAmentiInterface:
             os_family = self.truncate_text(profile_data.get('os_family', 'N/A'), max_text_length)
             device_type = self.truncate_text(profile_data.get('device_type', 'N/A'), max_text_length)
             risk_score = f"{profile_data.get('risk_score', 0):.1f}/10.0"
-            last_seen = time.ctime(profile_data.get('last_seen', 0))
+            last_seen = translator.format_relative_time(profile_data.get('last_seen', 0))
             
             # Color code risk score
             risk_float = profile_data.get('risk_score', 0)
@@ -1381,7 +1381,7 @@ class CyberAmentiInterface:
                 dossier_id = str(dossier.get('id', 'N/A'))
                 title = dossier.get('title', 'N/A')
                 target = dossier.get('target', 'N/A')
-                created = time.ctime(dossier.get('created_at', 0))
+                created = translator.format_relative_time(dossier.get('created_at', 0))
                 
                 dossiers_table.add_row(dossier_id, title, target, created)
             
@@ -1404,7 +1404,7 @@ class CyberAmentiInterface:
                 dossier_info = Panel(
                     f"[bold]Title:[/bold] {dossier.get('title', 'N/A')}\n"
                     f"[bold]Target:[/bold] {dossier.get('target', 'N/A')}\n"
-                    f"[bold]Created:[/bold] {time.ctime(dossier.get('created_at', 0))}\n"
+                    f"[bold]Created:[/bold] {translator.format_relative_time(dossier.get('created_at', 0))}\n"
                     f"[bold]Description:[/bold] {dossier.get('description', 'No description')}",
                     title=f"Dossier {dossier_id}",
                     style=theme['primary'],

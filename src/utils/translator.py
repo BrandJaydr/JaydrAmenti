@@ -311,7 +311,7 @@ class Translator:
         """Get plural form of translated string"""
         # Simple pluralization - could be enhanced for complex language rules
         if count == 1:
-            return self.get(key, **kwargs)
+            return self.get(key, count=count, **kwargs)
         else:
             plural_key = f"{key}_plural"
             if self._has_translation(plural_key):
@@ -553,13 +553,13 @@ class Translator:
             return self.get("now")
         elif diff < 3600:
             minutes = int(diff / 60)
-            return self.get_plural("minutes_ago", minutes, count=minutes)
+            return self.get_plural("minutes_ago", minutes)
         elif diff < 86400:
             hours = int(diff / 3600)
-            return self.get_plural("hours_ago", hours, count=hours)
+            return self.get_plural("hours_ago", hours)
         elif diff < 2592000:  # 30 days
             days = int(diff / 86400)
-            return self.get_plural("days_ago", days, count=days)
+            return self.get_plural("days_ago", days)
         else:
             return time.strftime('%Y-%m-%d', time.localtime(timestamp))
     
