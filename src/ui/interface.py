@@ -54,21 +54,53 @@ class CyberAmentiInterface:
     def show_sherlock_menu(self, theme_manager, translator):
         theme = theme_manager.current_theme
         self.clear_screen()
-        self.console.print(Panel("Sherlock Intelligence Integration", style=theme['primary']))
-        username = Prompt.ask(f"[{theme['accent']}]Enter username to search[/]")
+        self.console.print(Panel(translator.get("sherlock_search"), style=theme['primary']))
+
+        username = Prompt.ask(f"[{theme['accent']}]{translator.get('enter_username')}[/]")
+        if not username:
+            return
+
+        self.console.print(f"[{theme['info']}]{translator.get('searching_for', username=username)}[/]")
         
-        self.console.print(f"[{theme['info']}]Searching for {username} across platforms...[/]")
-        # Simplified call to sherlock
         try:
             import subprocess
-            cmd = [sys.executable, "-m", "sherlock_project", username]
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd="src/core/sherlock")
-            stdout, stderr = process.communicate()
-            self.console.print(stdout)
+            # Use --no-color to get clean output for parsing and re-styling
+            cmd = [sys.executable, "-m", "sherlock_project", username, "--no-color"]
+
+            with self.console.status(f"[{theme['accent']}]{translator.get('searching_social')}[/]", spinner="bouncingBar"):
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    cwd="src/core/sherlock",
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+                if process.stdout:
+                    for line in process.stdout:
+                        clean_line = line.strip()
+                        # Filter out common clutter/warnings
+                        if not clean_line or "checking for an update" in clean_line.lower():
+                            continue
+
+                        # Apply theme styling based on Sherlock's output patterns
+                        if "[+]" in clean_line:
+                            self.console.print(f"[bold {theme['success']}]{clean_line}[/]")
+                        elif "[*]" in clean_line:
+                            self.console.print(f"[{theme['info']}]{clean_line}[/]")
+                        elif "[-]" in clean_line:
+                            self.console.print(f"[{theme['dim']}]{clean_line}[/]")
+                        else:
+                            self.console.print(clean_line)
+
+                process.wait()
+
         except Exception as e:
-            self.console.print(f"[red]Sherlock failed: {e}[/red]")
+            self.console.print(f"[{theme['error']}]Sherlock failed: {e}[/]")
         
-        Prompt.ask(f"\n[{theme['secondary']}]Press Enter to continue...[/]", default="")
+        Prompt.ask(f"\n[{theme['secondary']}]{translator.get('press_enter')}[/]", default="")
 
     def get_terminal_width(self) -> int:
         """Get terminal width for responsive design"""

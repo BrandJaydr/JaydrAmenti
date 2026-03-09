@@ -125,7 +125,7 @@ class CyberAmenti:
             
             choice = Prompt.ask(
                 f"\n[{self.theme_manager.current_theme['accent']}]►[/] {self.translator.get('select_option')}",
-                choices=["0", "1", "2", "3", "4", "5", "6", "7"],
+                choices=["0", "1", "2", "3", "4", "5", "6", "7", "S", "s"],
                 show_choices=False
             )
             
