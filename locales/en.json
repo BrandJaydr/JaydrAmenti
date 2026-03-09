@@ -143,6 +143,8 @@
   "select_operation": "Select operation",
   "select_option": "Select an option",
   "select_scan_type": "Select scan type",
+  "sherlock_intelligence": "Sherlock Intelligence Integration",
+  "enter_username": "Enter username to search",
   "server": "Server",
   "service": "Service",
   "service_correlation": "Service Correlation",
