@@ -55,47 +55,50 @@ class CyberAmentiInterface:
         theme = theme_manager.current_theme
         self.clear_screen()
         self.console.print(Panel(translator.get("sherlock_search"), style=theme['primary']))
-        username = Prompt.ask(f"[{theme['accent']}]{translator.get('enter_username', fallback='Enter username to search')}[/]")
 
-        search_msg = translator.get("searching_for", fallback=f"Searching for {username}...", username=username)
+        username = Prompt.ask(f"[{theme['accent']}]{translator.get('enter_username')}[/]")
+        if not username:
+            return
+
+        self.console.print(f"[{theme['info']}]{translator.get('searching_for', username=username)}[/]")
         
         try:
             import subprocess
-            cmd = [sys.executable, "-m", "sherlock_project", username]
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                cwd="src/core/sherlock",
-                bufsize=1
-            )
+            # Use --no-color to get clean output for parsing and re-styling
+            cmd = [sys.executable, "-m", "sherlock_project", username, "--no-color"]
 
-            with self.console.status(f"[{theme['info']}]{search_msg}[/]") as status:
-                while True:
-                    line = process.stdout.readline()
-                    if not line and process.poll() is not None:
-                        break
-                    if line:
-                        line = line.strip()
-                        # Filter noise and update warnings
-                        if "A problem occurred while checking for an update" in line or not line:
+            with self.console.status(f"[{theme['accent']}]{translator.get('searching_social')}[/]", spinner="bouncingBar"):
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    cwd="src/core/sherlock",
+                    bufsize=1,
+                    universal_newlines=True
+                )
+
+                if process.stdout:
+                    for line in process.stdout:
+                        clean_line = line.strip()
+                        # Filter out common clutter/warnings
+                        if not clean_line or "checking for an update" in clean_line.lower():
                             continue
 
-                        # Highlight found accounts
-                        if line.startswith("[+]"):
-                            site_info = line.replace("[+]", "").strip()
-                            site_name = site_info.split(":")[0]
-                            url = site_info.split(": ")[1] if ": " in site_info else ""
-                            self.console.print(f"[bold green]✓[/][{theme['text']}] {translator.get('searching_social', fallback='Found on')}: [bold bright_cyan]{site_name}[/] [dim]({url})[/]")
+                        # Apply theme styling based on Sherlock's output patterns
+                        if "[+]" in clean_line:
+                            self.console.print(f"[bold {theme['success']}]{clean_line}[/]")
+                        elif "[*]" in clean_line:
+                            self.console.print(f"[{theme['info']}]{clean_line}[/]")
+                        elif "[-]" in clean_line:
+                            self.console.print(f"[{theme['dim']}]{clean_line}[/]")
+                        else:
+                            self.console.print(clean_line)
 
-            if process.returncode != 0 and process.returncode is not None:
-                 # Only show error if it's not a keyboard interrupt (which we handle elsewhere)
-                 if process.returncode != -9:
-                    self.console.print(f"[red]Sherlock exited with code {process.returncode}[/red]")
+                process.wait()
 
         except Exception as e:
-            self.console.print(f"[red]Sherlock failed: {e}[/red]")
+            self.console.print(f"[{theme['error']}]Sherlock failed: {e}[/]")
         
         Prompt.ask(f"\n[{theme['secondary']}]{translator.get('press_enter')}[/]", default="")
 
