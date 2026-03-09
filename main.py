@@ -125,9 +125,8 @@ class CyberAmenti:
             
             choice = Prompt.ask(
                 f"\n[{self.theme_manager.current_theme['accent']}]►[/] {self.translator.get('select_option')}",
-                choices=[opt[0] for opt in menu_options],
-                show_choices=False,
-                case_sensitive=False
+                choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                show_choices=False
             )
             
             if choice == "1":
