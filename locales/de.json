@@ -183,5 +183,9 @@
   "weeks": "Wochen",
   "workstation": "Arbeitsstation",
   "years": "Jahre",
-  "yesterday": "Gestern"
+  "yesterday": "Gestern",
+  "enter_username": "Geben Sie den zu suchenden Benutzernamen ein",
+  "searching_for": "Suche nach {username}...",
+  "searching_social": "Gefunden auf",
+  "sherlock_search": "Sherlock Intelligence Integration"
 }

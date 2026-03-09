@@ -183,5 +183,9 @@
   "weeks": "semaines",
   "workstation": "Poste de Travail",
   "years": "années",
-  "yesterday": "Hier"
+  "yesterday": "Hier",
+  "enter_username": "Entrez le nom d’utilisateur à rechercher",
+  "searching_for": "Recherche de {username}...",
+  "searching_social": "Trouvé sur",
+  "sherlock_search": "Intégration du Renseignement Sherlock"
 }
